@@ -1,36 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Meta information for character encoding and responsive design -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <!-- Link to external stylesheet -->
     <link rel="stylesheet" href="assets/style.css">
+    <style>
+        .profile-upload {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .profile-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 10px auto;
+            display: block;
+        }
+        .error {
+            color: red;
+            margin: 5px 0;
+        }
+    </style>
 </head>
-
 <body>
-    <!-- Navigation bar section -->
     <div class="navbar">
-        <!-- Logo of the company -->
-        <img src="hitachiLogo.png" alt="Socialite" style="width: fit-content;">
-        <!-- Dropdown menu -->
+        <img src="hitachiLogo.png" alt="Socialite">
         <div class="dropdown">
             <button>Menu</button>
             <div class="dropdown-content">
                 <a href="frontPage.html">Logout ></a>
-                <a href="#">Option 2 ></a>
-                <a href="#">Option 3 ></a>
             </div>
         </div>
     </div>
 
-    <!-- Main content section for sign up -->
     <div class="content-box">
         <h2>Sign up:</h2>
-        <form class="signup-form" id="signupForm">
+        <form class="signup-form" id="signupForm" enctype="multipart/form-data">
+            <div class="profile-upload">
+                <img id="profilePreview" src="https://via.placeholder.com/150" alt="Profile Preview" class="profile-preview">
+                <input type="file" id="profilePicture" accept="image/*" required>
+            </div>
             <input type="text" id="name" placeholder="Name" required><br>
             <input type="text" id="designation" placeholder="Designation" required><br>
             <input type="email" id="email" placeholder="Email" required><br>
@@ -48,45 +59,45 @@
     </div>
 
     <script>
+        const profilePicture = document.getElementById('profilePicture');
+        const profilePreview = document.getElementById('profilePreview');
         const signupForm = document.getElementById('signupForm');
         const errorMessage = document.getElementById('errorMessage');
 
-        // Event listener for form submission
-        signupForm.addEventListener('submit', async function (event) {
-            event.preventDefault(); // Prevent default form submission behavior
-
-            // Collect form values
-            const name = document.getElementById('name').value;
-            const designation = document.getElementById('designation').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            // Validate passwords match
-            if (password !== confirmPassword) {
-                errorMessage.textContent = "Passwords do not match!";
-                return;
+        profilePicture.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
+        });
 
-            // Clear any previous error message
-            errorMessage.textContent = "";
+        signupForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('designation', document.getElementById('designation').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('password', document.getElementById('password').value);
+            formData.append('confirmPassword', document.getElementById('confirmPassword').value);
+            formData.append('profilePicture', document.getElementById('profilePicture').files[0]);
 
             try {
-                // Send data to the backend
                 const response = await fetch('http://localhost:5002/api/auth/register', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, designation, email, password, confirmPassword }),
+                    body: formData
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Success: Redirect to thank you page
                     alert(data.message);
                     window.location.href = "thankYou.html";
                 } else {
-                    // Show error message
                     errorMessage.textContent = data.message || "An error occurred during signup.";
                 }
             } catch (error) {
@@ -96,5 +107,4 @@
         });
     </script>
 </body>
-
 </html>

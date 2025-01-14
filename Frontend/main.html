@@ -1,343 +1,463 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" name="viewport" content="width=device-width">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socialite</title>
-    <link rel="stylesheet" type="text/css" href="assets/styles.css">
     <style>
-        /* Styles for pending requests */
-        .request-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 10px 0;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+        }
+
+        .nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 1rem 2rem;
             background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .request-info {
-            flex: 1;
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007DBA;
         }
 
-        .request-info h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-        }
-
-        .request-info p {
-            margin: 5px 0;
-            color: #666;
-        }
-
-        .request-actions {
+        .profile {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 1rem;
         }
 
-        .approve-btn,
-        .reject-btn {
-            padding: 8px 16px;
+        .profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dropdown-section {
+            margin: 1rem 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .dropdown-header {
+            padding: 1rem;
+            background-color: #007DBA;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-content {
+            display: none;
+            padding: 1rem;
+        }
+
+        .member-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .member-card {
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .button {
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
             transition: background-color 0.3s;
         }
 
-        .approve-btn {
+        .connect-btn {
+            background-color: #007DBA;
+            color: white;
+        }
+
+        .accept-btn {
             background-color: #4CAF50;
             color: white;
         }
 
-        .reject-btn {
+        .decline-btn {
             background-color: #f44336;
             color: white;
         }
 
-        .approve-btn:hover {
-            background-color: #45a049;
-        }
-
-        .reject-btn:hover {
-            background-color: #da190b;
-        }
-
-        .error {
-            color: #f44336;
+        .user-info {
             text-align: center;
-            padding: 20px;
+            width: 100%;
         }
 
-        #pendingRequestsLink {
-            cursor: pointer;
+        .user-info h3 {
+            margin: 0.5rem 0;
         }
 
-        #pendingRequestsLink:hover {
-            color: #4CAF50;
+        .user-info p {
+            color: #666;
+            margin: 0.2rem 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        #admin-section {
+            display: none;
+            margin: 1rem 2rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #about-section {
+            margin: 1rem 2rem;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
-
 <body>
     <div class="nav">
         <div class="logo">Socialite</div>
-        <div class="links">
-            <a onclick="scrollToSection('home')">About us</a>
-            <a onclick="scrollToSection('suggestions')">Suggestions</a>
-            <a onclick="scrollToSection('connections')">Connections</a>
-            <a id="pendingRequestsLink" onclick="loadPendingRequests()" style="display: none;">Admin Functions</a>
-        </div>
         <div class="profile">
             <img id="profile-pic" src="https://via.placeholder.com/150" alt="Profile Picture">
-            <a href="frontPage.html"><button>Logout</button></a>
+            <button onclick="logout()" class="button">Logout</button>
         </div>
     </div>
 
-    <button class="editProfile">Edit Profile Picture</button>
-
-    <section id="aboutUsSection">
+    <div id="about-section">
         <h2>About Us</h2>
         <p id="aboutUs">Loading...</p>
-    </section>
+    </div>
 
-    <section id="suggestions">
-        <h1>Suggestions</h1>
-        <div class="membersContainer">
-            <div class="members">
-                <div class="suggestionCard">
-                    <img src="https://via.placeholder.com/150" alt="Profile Picture">
-                    <p>Name: Member 1</p>
-                    <p>Designation: Designer</p>
-                    <button onclick="toggleConnect(this)">Connect?</button>
-                </div>
-            </div>
+    <div class="dropdown-section">
+        <div class="dropdown-header" onclick="toggleSection('connections-content')">
+            <h2>Connections</h2>
+            <span class="dropdown-arrow">▼</span>
         </div>
-    </section>
+        <div id="connections-content" class="dropdown-content member-grid"></div>
+    </div>
 
-    <section id="connections">
-        <h1>Connections</h1>
-        <div class="dropMenu">
-            <button class="dropButton" onclick="toggleMenu('menu1')">
-                Connections &#9662;
-            </button>
-            <div id="menu1" class="menuContent" style="display: none;">
-                <div class="memberRow">
-                    <img src="https://via.placeholder.com/150" alt="Profile Picture" class="circularPic">
-                    <span class="member-name">Member 1</span>
-                </div>
-            </div>
+    <div class="dropdown-section">
+        <div class="dropdown-header" onclick="toggleSection('requests-content')">
+            <h2>Connection Requests</h2>
+            <span class="dropdown-arrow">▼</span>
         </div>
-    </section>
+        <div id="requests-content" class="dropdown-content member-grid"></div>
+    </div>
 
-    <section id="pendingRequests" style="display: none;">
-        <h1>Pending Signup Requests</h1>
-        <div id="requestsContainer">
-            <!-- Pending requests will be loaded here dynamically -->
+    <div class="dropdown-section">
+        <div class="dropdown-header" onclick="toggleSection('members-content')">
+            <h2>Members</h2>
+            <span class="dropdown-arrow">▼</span>
         </div>
-    </section>
+        <div id="members-content" class="dropdown-content member-grid"></div>
+    </div>
 
     <div id="admin-section">
         <h2>Admin Dashboard</h2>
-        <textarea id="markdown-editor" rows="10" cols="50" placeholder="Update front page content..."></textarea>
-        <br>
-        <button onclick="updateContent()">Submit Changes</button>
+        <div id="pending-requests" class="member-grid"></div>
+        <textarea id="markdown-editor" rows="10" placeholder="Update front page content..."></textarea>
+        <button onclick="updateContent()" class="button connect-btn">Submit Changes</button>
     </div>
-    
 
     <script>
-        // Verify Admin Status
-        // Replace your existing DOMContentLoaded event listener with this:
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = '/main.html';
+                window.location.href = '/frontPage.html';
                 return;
             }
 
             try {
                 const response = await fetch('/api/users/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to verify user');
-                }
+                if (!response.ok) throw new Error('Failed to verify user');
 
                 const userData = await response.json();
                 
                 if (userData.isAdmin) {
-                    document.getElementById('pendingRequestsLink').style.display = 'inline-block';
                     document.getElementById('admin-section').style.display = 'block';
+                    loadPendingRequests();
+                    fetchContent();
                 }
 
-                else{
-                    document.getElementById('admin-section').style.display = 'none';
-                }
-                // Update profile picture if available
                 if (userData.profilePicture) {
                     document.getElementById('profile-pic').src = userData.profilePicture;
                 }
 
+                await Promise.all([
+                    loadConnections(),
+                    loadRequests(),
+                    loadMembers(),
+                    fetchAboutUsContent()
+                ]);
             } catch (error) {
                 console.error('Error:', error);
                 window.location.href = '/frontPage.html';
             }
         });
 
-        // Update your loadPendingRequests function with better error handling
-        async function loadPendingRequests() {
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const currentDisplay = content.style.display;
+            content.style.display = currentDisplay === 'none' ? 'grid' : 'none';
+        }
+
+        async function loadConnections() {
             try {
-                // Hide all sections
-                document.querySelectorAll('section').forEach(section => {
-                    section.style.display = 'none';
+                const response = await fetch('/api/connections', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
-                
-                const pendingSection = document.getElementById('pendingRequests');
-                pendingSection.style.display = 'block';
-                
-                const container = document.getElementById('requestsContainer');
-                container.innerHTML = '<p>Loading requests...</p>';
+                const connections = await response.json();
 
-                const token = localStorage.getItem('token');
-                const response = await fetch('/api/admin/pending-requests', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch pending requests');
-                }
-
-                const users = await response.json();
-
-                if (users.length === 0) {
-                    container.innerHTML = '<p>No pending requests available.</p>';
-                    return;
-                }
-
-                container.innerHTML = users.map(user => `
-                    <div class="request-card">
-                        <div class="request-info">
-                            <h3>${user.name}</h3>
-                            <p>Email: ${user.email}</p>
-                            <p>Designation: ${user.designation}</p>
-                        </div>
-                        <div class="request-actions">
-                            <button onclick="handleRequest('${user._id}', 'approve')" class="approve-btn">Approve</button>
-                            <button onclick="handleRequest('${user._id}', 'reject')" class="reject-btn">Reject</button>
+                document.getElementById('connections-content').innerHTML = connections.map(connection => `
+                    <div class="member-card">
+                        <img src="${connection.profilePicture}" alt="Profile" class="profile-pic">
+                        <div class="user-info">
+                            <h3>${connection.name}</h3>
+                            <p>${connection.designation}</p>
+                            <p>${connection.email}</p>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('requestsContainer').innerHTML = 
-                    '<p class="error">Error loading pending requests. Please try again later.</p>';
+                console.error('Error loading connections:', error);
             }
         }
 
-        // Update the handleRequest function with better error handling
-        async function handleRequest(userId, action) {
+        async function loadRequests() {
             try {
-                const token = localStorage.getItem('token');
-                const endpoint = action === 'approve' 
-                    ? `/api/admin/approve/${userId}` 
-                    : `/api/admin/reject/${userId}`;
+                const response = await fetch('/api/connections/requests', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const requests = await response.json();
+
+                document.getElementById('requests-content').innerHTML = requests.map(request => `
+                    <div class="member-card">
+                        <img src="${request.profilePicture}" alt="Profile" class="profile-pic">
+                        <div class="user-info">
+                            <h3>${request.name}</h3>
+                            <div class="button-group">
+                                <button onclick="respondToRequest('${request._id}', 'accept')" class="button accept-btn">Accept</button>
+                                <button onclick="respondToRequest('${request._id}', 'decline')" class="button decline-btn">Decline</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading requests:', error);
+            }
+        }
+
+        async function loadMembers() {
+            try {
+                const response = await fetch('/api/members', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const members = await response.json();
+
+                document.getElementById('members-content').innerHTML = members.map(member => `
+                    <div class="member-card">
+                        <img src="${member.profilePicture || 'https://via.placeholder.com/150'}" 
+                            alt="Profile" 
+                            class="profile-pic">
+                        <div class="user-info">
+                            <h3>${member.name}</h3>
+                            ${
+                                member.isConnected ? 
+                                '<p>Connected</p>' :
+                                member.requestSent ?
+                                '<p>Request Pending</p>' :
+                                member.requestReceived ?
+                                '<p>Request Received</p>' :
+                                `<button onclick="sendRequest('${member._id}')" 
+                                        class="button connect-btn">Connect</button>`
+                            }
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+        async function sendRequest(userId) {
+            try {
+                const response = await fetch(`/api/connections/request/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to send request');
+                
+                alert('Connection request sent successfully');
+                await loadMembers();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send request');
+            }
+        }
+
+        async function respondToRequest(userId, action) {
+            try {
+                const response = await fetch(`/api/connections/respond/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action })
+                });
+
+                if (!response.ok) throw new Error(`Failed to ${action} request`);
+
+                alert(`Request ${action}ed successfully`);
+                await Promise.all([
+                    loadRequests(),
+                    loadConnections(),
+                    loadMembers()
+                ]);
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Failed to ${action} request`);
+            }
+        }
+
+        async function loadPendingRequests() {
+            try {
+                const response = await fetch('/api/admin/pending-requests', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch requests');
+
+                const users = await response.json();
+                
+                document.getElementById('pending-requests').innerHTML = users.length === 0 ? 
+                    '<p>No pending requests</p>' :
+                    users.map(user => `
+                        <div class="member-card">
+                            <h3>${user.name}</h3>
+                            <p>${user.email}</p>
+                            <p>${user.designation}</p>
+                            <div class="button-group">
+                                <button onclick="handleAdminRequest('${user._id}', 'approve')" 
+                                        class="button accept-btn">Approve</button>
+                                <button onclick="handleAdminRequest('${user._id}', 'reject')" 
+                                        class="button decline-btn">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function handleAdminRequest(userId, action) {
+            try {
+                const endpoint = action === 'approve' ? 
+                    `/api/admin/approve/${userId}` : 
+                    `/api/admin/reject/${userId}`;
                 
                 const response = await fetch(endpoint, {
                     method: action === 'approve' ? 'PUT' : 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to ${action} user`);
-                }
+                if (!response.ok) throw new Error(`Failed to ${action} user`);
 
-                await response.json();
-                alert(`User successfully ${action}d`);
-                loadPendingRequests(); // Refresh the list
+                alert(`User ${action}d successfully`);
+                await loadPendingRequests();
             } catch (error) {
                 console.error('Error:', error);
-                alert(`Error ${action}ing user. Please try again.`);
+                alert(`Failed to ${action} user`);
             }
         }
 
-        const isAdmin = true; // Set this dynamically after login
-
-    // Function to toggle admin section visibility
-    function toggleAdminSection() {
-        const adminSection = document.getElementById('admin-section');
-        if (isAdmin) {
-            adminSection.style.display = 'block';
-        } else {
-            adminSection.style.display = 'none';
-        }
-    }
-
-    // Call the function on page load
-        document.addEventListener('DOMContentLoaded', toggleAdminSection);
-
-        // Function to handle saving content
-        // Fetch and display content
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch('/getContent')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('markdown-editor').value = data.content || '';
-                })
-                .catch(error => console.error('Error fetching content:', error));
-        });
-
-        // Function to update content
-        function updateContent() {
-            const markdownContent = document.getElementById('markdown-editor').value;
-
-            fetch('/updateContent', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ content: markdownContent })
-            })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Content updated successfully');
-                    } else {
-                        alert('Failed to update content');
-                    }
-                })
-                .catch(error => console.error('Error updating content:', error));
+        async function fetchContent() {
+            try {
+                const response = await fetch('/getContent');
+                const data = await response.json();
+                document.getElementById('markdown-editor').value = data.content || '';
+            } catch (error) {
+                console.error('Error fetching content:', error);
+            }
         }
 
-            async function fetchAboutUsContent() {
-                try {
-                    const response = await fetch('/getContent');
-                    const data = await response.json();
-                    
-                    if (response.ok && data.content) {
-                        const aboutUsSection = document.getElementById('aboutUs');
-                        aboutUsSection.textContent = data.content;
-                    } else {
-                        console.error('Failed to fetch About Us content:', data.message || 'Unknown error');
-                    }
-                } catch (error) {
-                    console.error('Error fetching About Us content:', error);
+        async function updateContent() {
+            try {
+                const content = document.getElementById('markdown-editor').value;
+                const response = await fetch('/updateContent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+
+                if (!response.ok) throw new Error('Failed to update content');
+
+                alert('Content updated successfully');
+                await fetchAboutUsContent();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update content');
+            }
+        }
+
+        async function fetchAboutUsContent() {
+            try {
+                const response = await fetch('/getContent');
+                const data = await response.json();
+                
+                if (response.ok && data.content) {
+                    document.getElementById('aboutUs').textContent = data.content;
                 }
+            } catch (error) {
+                console.error('Error fetching About Us content:', error);
+            }
         }
 
-        // Call the function on page load
-        document.addEventListener('DOMContentLoaded', fetchAboutUsContent);
-
-
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/frontPage.html';
+        }
     </script>
 </body>
-
 </html>
