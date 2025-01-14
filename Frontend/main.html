@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width">
+    <title>Socialite</title>
+    <link rel="stylesheet" type="text/css" href="assets/styles.css">
+    <style>
+        /* Styles for pending requests */
+        .request-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .request-info {
+            flex: 1;
+        }
+
+        .request-info h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .request-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .approve-btn,
+        .reject-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .approve-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .reject-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .approve-btn:hover {
+            background-color: #45a049;
+        }
+
+        .reject-btn:hover {
+            background-color: #da190b;
+        }
+
+        .error {
+            color: #f44336;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #pendingRequestsLink {
+            cursor: pointer;
+        }
+
+        #pendingRequestsLink:hover {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="nav">
+        <div class="logo">Socialite</div>
+        <div class="links">
+            <a onclick="scrollToSection('home')">About us</a>
+            <a onclick="scrollToSection('suggestions')">Suggestions</a>
+            <a onclick="scrollToSection('connections')">Connections</a>
+            <a id="pendingRequestsLink" onclick="loadPendingRequests()" style="display: none;">Admin Functions</a>
+        </div>
+        <div class="profile">
+            <img id="profile-pic" src="https://via.placeholder.com/150" alt="Profile Picture">
+            <a href="frontPage.html"><button>Logout</button></a>
+        </div>
+    </div>
+
+    <button class="editProfile">Edit Profile Picture</button>
+
+    <section id="aboutUsSection">
+        <h2>About Us</h2>
+        <p id="aboutUs">Loading...</p>
+    </section>
+
+    <section id="suggestions">
+        <h1>Suggestions</h1>
+        <div class="membersContainer">
+            <div class="members">
+                <div class="suggestionCard">
+                    <img src="https://via.placeholder.com/150" alt="Profile Picture">
+                    <p>Name: Member 1</p>
+                    <p>Designation: Designer</p>
+                    <button onclick="toggleConnect(this)">Connect?</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="connections">
+        <h1>Connections</h1>
+        <div class="dropMenu">
+            <button class="dropButton" onclick="toggleMenu('menu1')">
+                Connections &#9662;
+            </button>
+            <div id="menu1" class="menuContent" style="display: none;">
+                <div class="memberRow">
+                    <img src="https://via.placeholder.com/150" alt="Profile Picture" class="circularPic">
+                    <span class="member-name">Member 1</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pendingRequests" style="display: none;">
+        <h1>Pending Signup Requests</h1>
+        <div id="requestsContainer">
+            <!-- Pending requests will be loaded here dynamically -->
+        </div>
+    </section>
+
+    <div id="admin-section">
+        <h2>Admin Dashboard</h2>
+        <textarea id="markdown-editor" rows="10" cols="50" placeholder="Update front page content..."></textarea>
+        <br>
+        <button onclick="updateContent()">Submit Changes</button>
+    </div>
+    
+
+    <script>
+        // Verify Admin Status
+        // Replace your existing DOMContentLoaded event listener with this:
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/main.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to verify user');
+                }
+
+                const userData = await response.json();
+                
+                if (userData.isAdmin) {
+                    document.getElementById('pendingRequestsLink').style.display = 'inline-block';
+                    document.getElementById('admin-section').style.display = 'block';
+                }
+
+                else{
+                    document.getElementById('admin-section').style.display = 'none';
+                }
+                // Update profile picture if available
+                if (userData.profilePicture) {
+                    document.getElementById('profile-pic').src = userData.profilePicture;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                window.location.href = '/frontPage.html';
+            }
+        });
+
+        // Update your loadPendingRequests function with better error handling
+        async function loadPendingRequests() {
+            try {
+                // Hide all sections
+                document.querySelectorAll('section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                const pendingSection = document.getElementById('pendingRequests');
+                pendingSection.style.display = 'block';
+                
+                const container = document.getElementById('requestsContainer');
+                container.innerHTML = '<p>Loading requests...</p>';
+
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/pending-requests', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch pending requests');
+                }
+
+                const users = await response.json();
+
+                if (users.length === 0) {
+                    container.innerHTML = '<p>No pending requests available.</p>';
+                    return;
+                }
+
+                container.innerHTML = users.map(user => `
+                    <div class="request-card">
+                        <div class="request-info">
+                            <h3>${user.name}</h3>
+                            <p>Email: ${user.email}</p>
+                            <p>Designation: ${user.designation}</p>
+                        </div>
+                        <div class="request-actions">
+                            <button onclick="handleRequest('${user._id}', 'approve')" class="approve-btn">Approve</button>
+                            <button onclick="handleRequest('${user._id}', 'reject')" class="reject-btn">Reject</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('requestsContainer').innerHTML = 
+                    '<p class="error">Error loading pending requests. Please try again later.</p>';
+            }
+        }
+
+        // Update the handleRequest function with better error handling
+        async function handleRequest(userId, action) {
+            try {
+                const token = localStorage.getItem('token');
+                const endpoint = action === 'approve' 
+                    ? `/api/admin/approve/${userId}` 
+                    : `/api/admin/reject/${userId}`;
+                
+                const response = await fetch(endpoint, {
+                    method: action === 'approve' ? 'PUT' : 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to ${action} user`);
+                }
+
+                await response.json();
+                alert(`User successfully ${action}d`);
+                loadPendingRequests(); // Refresh the list
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error ${action}ing user. Please try again.`);
+            }
+        }
+
+        const isAdmin = true; // Set this dynamically after login
+
+    // Function to toggle admin section visibility
+    function toggleAdminSection() {
+        const adminSection = document.getElementById('admin-section');
+        if (isAdmin) {
+            adminSection.style.display = 'block';
+        } else {
+            adminSection.style.display = 'none';
+        }
+    }
+
+    // Call the function on page load
+        document.addEventListener('DOMContentLoaded', toggleAdminSection);
+
+        // Function to handle saving content
+        // Fetch and display content
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/getContent')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('markdown-editor').value = data.content || '';
+                })
+                .catch(error => console.error('Error fetching content:', error));
+        });
+
+        // Function to update content
+        function updateContent() {
+            const markdownContent = document.getElementById('markdown-editor').value;
+
+            fetch('/updateContent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: markdownContent })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Content updated successfully');
+                    } else {
+                        alert('Failed to update content');
+                    }
+                })
+                .catch(error => console.error('Error updating content:', error));
+        }
+
+            async function fetchAboutUsContent() {
+                try {
+                    const response = await fetch('/getContent');
+                    const data = await response.json();
+                    
+                    if (response.ok && data.content) {
+                        const aboutUsSection = document.getElementById('aboutUs');
+                        aboutUsSection.textContent = data.content;
+                    } else {
+                        console.error('Failed to fetch About Us content:', data.message || 'Unknown error');
+                    }
+                } catch (error) {
+                    console.error('Error fetching About Us content:', error);
+                }
+        }
+
+        // Call the function on page load
+        document.addEventListener('DOMContentLoaded', fetchAboutUsContent);
+
+
+    </script>
+</body>
+
+</html>

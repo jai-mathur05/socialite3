@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Meta information for character encoding and responsive design -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+    <!-- Navigation bar section -->
+    <div class="navbar">
+        <!-- Logo of the company -->
+        <img src="hitachiLogo.png" alt="Socialite" style="width: fit-content;">
+        <!-- Dropdown menu -->
+        <div class="dropdown">
+            <button>Menu</button>
+            <div class="dropdown-content">
+                <a href="frontPage.html">Logout ></a>
+                <a href="#">Option 2 ></a>
+                <a href="#">Option 3 ></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content section for sign up -->
+    <div class="content-box">
+        <h2>Sign up:</h2>
+        <form class="signup-form" id="signupForm">
+            <input type="text" id="name" placeholder="Name" required><br>
+            <input type="text" id="designation" placeholder="Designation" required><br>
+            <input type="email" id="email" placeholder="Email" required><br>
+            <input type="password" id="password" placeholder="Password" required><br>
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" required><br>
+            <p class="error" id="errorMessage"></p>
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <h2 style="margin: 0%; margin-top:15px;">OR</h2>
+        <div>
+            <h4>Already a member?</h4>
+            <a href="login.html"><button class="b1">Sign In</button></a>
+        </div>
+    </div>
+
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Event listener for form submission
+        signupForm.addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            // Collect form values
+            const name = document.getElementById('name').value;
+            const designation = document.getElementById('designation').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                errorMessage.textContent = "Passwords do not match!";
+                return;
+            }
+
+            // Clear any previous error message
+            errorMessage.textContent = "";
+
+            try {
+                // Send data to the backend
+                const response = await fetch('http://localhost:5002/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, designation, email, password, confirmPassword }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success: Redirect to thank you page
+                    alert(data.message);
+                    window.location.href = "thankYou.html";
+                } else {
+                    // Show error message
+                    errorMessage.textContent = data.message || "An error occurred during signup.";
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = "Failed to connect to the server.";
+            }
+        });
+    </script>
+</body>
+
+</html>
